@@ -118,8 +118,8 @@ interactable = {
 		text = "Offer life...?"
 		},
 	objCaptainBeaconResupply = {
-		name = "Resupply Beacon",
-		text = "Resupply"
+		name = "Beacon: Resupply",
+		text = "Take Resupply Charge"
 		}
 	},
 }
