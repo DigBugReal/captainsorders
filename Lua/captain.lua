@@ -34,6 +34,8 @@ local sprite_fall_half = 		Sprite.new("captainFallHalf", path.combine(PATH, "Spr
 local sprite_climb = 			Sprite.new("captainClimb", path.combine(PATH, "Sprites/climb.png"), 6, 11, 25)
 local sprite_death = 			Sprite.new("captainDeath", path.combine(PATH, "Sprites/death.png"), 8, 13, 28)
 local sprite_decoy = 			Sprite.new("captainDecoy", path.combine(PATH, "Sprites/decoy.png"), 1, 14, 20)
+local sprite_drone_idle = 			Sprite.new("captainDroneIdle", path.combine(PATH, "Sprites/droneidle.png"), 5, 11, 14)
+local sprite_drone_shoot = 			Sprite.new("captainDroneShoot", path.combine(PATH, "Sprites/droneshoot.png"), 5, 33, 13)
 
 local sprite_shoot1 = 			Sprite.new("captainShoot1", path.combine(PATH, "Sprites/shoot1.png"), 25, 15, 34, 0.9)
 local sprite_shoot1_half = 		Sprite.new("captainShoot1Half", path.combine(PATH, "Sprites/shoot1Half.png"), 25, 15, 34)
@@ -56,6 +58,7 @@ local sprite_bar = 				Sprite.new("captainBeaconHackingBar", path.combine(PATH, 
 local sprite_log = 				Sprite.new("captainLog", path.combine(PATH, "Sprites/captainLog.png"), 1, 180, 180)
 local sprite_credits = 			Sprite.new("captainCredits", path.combine(PATH, "Sprites/credits.png"), 1, 10, 10)
 
+local sprite_punish_buff =		Sprite.new("captainPunishBuffSprite", path.combine(PATH, "Sprites/punisherBuff.png"), 31, 10, 10)
 local sprite_golem_gold = 			Sprite.new("captainGoldGolem", path.combine(PATH, "Sprites/sDroneGolemSItem.png"), 1, 24, 23)
 local sprite_jelly_gold = 			Sprite.new("captainGoldJelly", path.combine(PATH, "Sprites/sDroneJellySItem.png"), 1, 26, 16)
 
@@ -73,6 +76,11 @@ local sound_vulcanCharge_2 = Sound.new("captainVulcanCharge_2Sound", path.combin
 local cap = Survivor.new("captain")
 local cap_id = cap.value
 
+local cap_log = SurvivorLog.new_from_survivor(cap)
+cap_log.portrait_id = sprite_log
+cap_log.sprite_id = sprite_walk
+cap_log.sprite_icon_id = sprite_portrait
+
 cap:set_stats_base({
 	maxhp = 110,
 	damage = 11,
@@ -85,18 +93,20 @@ cap:set_stats_level({
 	armor = 2,
 })
 
-cap.cape_offset = Array.new({
-	3, -10,
-	1, -7,
-})
+cap.cape_offset = Array.new({3, -10, 1, -7})
 cap.primary_color = Color.from_rgb(53, 95, 184)
 
 cap.sprite_loadout = sprite_loadout
 cap.sprite_portrait = sprite_portrait
 cap.sprite_portrait_small = sprite_portrait_small
+
 cap.sprite_title = sprite_walk
 cap.sprite_idle = sprite_idle
 cap.sprite_credits = sprite_credits
+
+cap.sprite_palette = sprite_palette
+cap.sprite_portrait_palette = sprite_palette
+cap.sprite_loadout_palette = sprite_palette
 
 -- cap:set_palettes(sprite_palette, sprite_palette, sprite_palette)
 -- cap:add_skin("Militia", 1, sprite_loadout, sprite_portrait_S1, sprite_portrait_small_S1)
@@ -105,11 +115,6 @@ cap.sprite_credits = sprite_credits
 -- cap:add_skin("Malice", 4, sprite_loadout, sprite_portrait_S4, sprite_portrait_small_S4)
 -- cap:add_skin("Estranged", 5, sprite_loadout, sprite_portrait_S5, sprite_portrait_small_S5)
 -- cap:add_skin("Judgement", 6, sprite_loadout, sprite_portrait_SPROV, sprite_portrait_small_SPROV)
-
-local cap_log = SurvivorLog.new_from_survivor(cap)
-cap_log.portrait_id = sprite_log
-cap_log.stat_regen_base = 0.01
-cap_log.stat_regen_level = 0.002
 
 Callback.add(cap.on_init, function(actor)
 	
@@ -121,6 +126,8 @@ Callback.add(cap.on_init, function(actor)
 	actor.sprite_climb = sprite_climb
 	actor.sprite_death = sprite_death
 	actor.sprite_decoy = sprite_decoy
+	actor.sprite_drone_idle = sprite_drone_idle
+	actor.sprite_drone_shoot = sprite_drone_shoot
 
 	local idle_half = Array.new()
 	local walk_half = Array.new()
@@ -268,6 +275,14 @@ parShocking:set_life(90, 180)
 parShocking:set_scale(2, 2)
 parShocking:set_alpha3(1, 1, 0)
 
+local parResupply = Particle.new("particleBeaconResupplyUse")
+parResupply:set_shape(Particle.Shape.PIXEL)
+parResupply:set_alpha2(1, 0)
+parResupply:set_life(50, 50)
+parResupply:set_color_rgb(255, 255, 140, 0, 0, 0)
+parResupply:set_speed(1, 1.5, -0.01, 0)
+parResupply:set_size(5, 6, -0.05, 0)
+parResupply:set_direction(90, 90, 0, 0)
 
 --Buffs
 --Shock
@@ -334,14 +349,20 @@ end)
 
 --Punisher dmg
 local pun = Buff.new("captainPunishBuff")
-pun.show_icon = false
-pun.max_stack = 999
+pun.show_icon = true
+pun.icon_sprite = sprite_punish_buff
+pun.icon_subimage = 0
+pun.max_stack = 31
 
 RecalculateStats.add(function(actor, api)
 if actor:buff_count(pun) <= 0 then return end
 
 api.damage_mult(1.02 + (0.08 * actor:buff_count(pun)))
-print(actor:buff_count(pun))
+end)
+
+Callback.add(pun.on_apply, function(actor)
+pun.icon_stack_subimage = actor:buff_count(pun) - 1
+
 end)
 
 
@@ -1443,9 +1464,12 @@ local function setupgenericbeaconlanding(self, data)
 			local buff_shadow_clone = Buff.find("shadowClone")
 			for i=0, self.parent:buff_count(buff_shadow_clone) do
 				local attack = self.parent:fire_explosion(self.x, self.y - 10, 270, 270, self.parent:skill_get_damage(beacon), sprite_impact, gm.constants.sSparks1S).attack_info
-				-- attack:set_stun(1.5, Attack_Info.KNOCKBACK_DIR.right, Attack_Info.KNOCKBACK_KIND.none)
 				attack:set_knockback(1, 1.5 * 60)
 				attack.climb = i * 8
+				if self:get_object() == objPunisher then
+					attack.beaconHit = 1
+					attack.beacon = self
+				end
 				self.parent:sound_play(gm.constants.wTurtleExplosion, 1, 0.8)
 				self.parent:sound_play(gm.constants.wWormExplosion, 1, 0.6)
 				self:screen_shake(5)
@@ -1597,7 +1621,7 @@ end)
 
 Callback.add(objResupply.on_step, function(self)
 	local data = Instance.get_data(self)
-	
+
 	if data.use_cooldown then
 		if data.use_cooldown > 0 then
 			data.use_cooldown = data.use_cooldown - 1
@@ -1619,6 +1643,7 @@ Callback.add(objResupply.on_step, function(self)
 		self:interactable_init()
 		self:interactable_init_name()
 	else
+	
 		if self.active == 1 then
 			actor = Instance.wrap(self.activator)
 			actor:get_active_skill(0):reset_cooldown()
@@ -1631,6 +1656,15 @@ Callback.add(objResupply.on_step, function(self)
 				end
 			end
 			actor:heal_barrier(actor.maxbarrier * 0.35)
+			local flash = GM.instance_create(actor.x, actor.y, gm.constants.oEfFlash)
+			flash.parent = actor
+			flash.image_blend = Color.from_rgb(255, 108, 28)
+			flash.rate = 0.05
+			flash.image_alpha = 0.5
+			for i = 5, math.random(12, 20) do
+				parResupply:create(actor.x + math.random(-16, 16), actor.y + math.random(-10, 20))
+			end
+			
 			self.active = 2
 			data.uses = data.uses - 1
 			data.use_cooldown = 150
@@ -2023,16 +2057,16 @@ end)
 Callback.add(objPunisher.on_create, function(self)
 	local data = Instance.get_data(self)
 	setupgenericbeacon(self, data)
-	if not data.punished then
-		data.punished = 1
-	end
+	data.punished = 1
 end)
 
 Callback.add(Callback.ON_ATTACK_HIT, function(hit_info)
-	if hit_info.inflictor.object_index ~= objPunisher then return end
-	local data = Instance.get_data(hit_info.inflictor)
+	if not hit_info.attack_info.beaconHit then return end
+	local data = Instance.get_data(hit_info.attack_info.beacon)
 	if data.punished ~= nil then
-		data.punished = data.punished + 1
+		if hit_info.target.team ~= hit_info.inflictor then
+			data.punished = data.punished + 1
+		end
 	end
 end)
 
@@ -2047,10 +2081,13 @@ Callback.add(objPunisher.on_step, function(self)
 			local bufflist = List.new()
 			self:collision_ellipse_list(self.x - 135, self.y - 135, self.x + 135, self.y + 135, gm.constants.pActor, false, true, bufflist, false)
 			for _, actor in ipairs(bufflist) do
-				if actor.team == self.parent.team then
-					--todo: make this stack properly
-					actor:buff_apply(pun, 30)
-
+				if data.punished ~= nil and actor.team == self.parent.team then
+					--todo: fix interaction with two or more beacons buffing at once (maxes out buff)
+					if actor:buff_count(pun) ~= data.punished then
+						actor:buff_apply(pun, 15, data.punished)
+					else
+						GM.set_buff_time_nosync(actor, pun, 5)
+					end
 				end
 			end
 			bufflist:destroy()
@@ -2061,6 +2098,11 @@ end)
 Callback.add(objPunisher.on_draw, function(self)
 	local data = Instance.get_data(self)
 	setupgenericbeacondraw(self, data, Color.from_rgb(255, 55, 35), true)
+	if data.beingcalled ~= 1 then
+		if data.activetimer >= 60 then
+			GM.draw_sprite(sprite_punish_buff, data.punished - 1, self.x, self.y - 56	)
+		end
+	end
 end)
 
 --Misc Callbacks
