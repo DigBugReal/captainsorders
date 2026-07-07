@@ -2,27 +2,57 @@
 --CoolLoadersInc
 
 mods["ReturnsAPI-ReturnsAPI"].auto{
-    NAMESPACE   = "CaptainReturns",
-    mp          = true
+    namespace   = "CaptainReturns",
+    mp          = false
 }
 
 PATH = _ENV["!plugins_mod_folder_path"].."/"
 
---Autofire config setup
--- mods.on_all_mods_loaded(function()
-    -- for k, v in pairs(mods) do
-        -- if type(v) == "table" and v.tomlfuncs then
-            -- Toml = v
-        -- end
-    -- end
-    -- params = {
-        -- vulcanAutoFire = false;
-    -- }
-    -- params = Toml.config_update(_ENV["!guid"], params) -- Load Save
--- end)
+--config setup
+Options = {
+    vulcanAuto = false,
+	capJudgementHint = true
+}
 
+--Modoptions
+OptionsTOML = TOML.new()
+if not OptionsTOML:read() then
+    OptionsTOML:write(Options)
+else
+    Options = OptionsTOML:read()
+end
 
+modOptions = ModOptions.new()
+capCheckbox = modOptions:add_checkbox("captainAutofire")
+capCheckbox:add_getter(function()
+    return Options.vulcanAuto
+end)
+capCheckbox:add_setter(function(value)
+    Options.vulcanAuto = value
+    OptionsTOML:write(Options)
+end)
 
+capCheck2 = modOptions:add_button("captainForceUnlock")
+
+capCheck2:add_callback(function()
+	local unloque = Achievement.wrap(Achievement.find("captainUnlockChar", namespace))
+	if not unloque:is_unlocked() then
+		unloque:add_progress(1)
+	else
+		GM.achievement_force_set_unlocked(unloque, false)
+	end
+end)
+
+capCheck3 = modOptions:add_checkbox("captainDoJudgeTip")
+capCheck3:add_getter(function()
+    return Options.capJudgementHint
+end)
+capCheck3:add_setter(function(value)
+    Options.capJudgementHint = value
+    OptionsTOML:write(Options)
+end)
+
+--init
 local init = function()
 	local folders = {
 		"Lua",
@@ -39,45 +69,6 @@ local init = function()
 		end
 	end
 	
-	-- --autofire config and networking
-	-- local packetConfig = Packet.new()
-    -- local PlayerPacket = Packet.new()
-  -- Callback.add(Callback.TYPE.onGameStart, "CaptainReturns-onGameStart", function()
-        -- local function GameStart()
-            -- if not gm._mod_game_ingame() then
-                -- return
-            -- end
-            -- local playerdata = Player.get_client():get_data()
-            -- playerdata.vulcanAutoFire = params.vulcanAutoFire
-            -- if gm._mod_net_isOnline() then
-                -- local msg = packetConfig:message_begin()
-                -- msg:write_instance(Player.get_client())
-                -- msg:write_byte(params.vulcanAutoFire)
-
-                -- if gm._mod_net_isClient() then
-                    -- msg:send_to_host()
-                -- end
-                -- if gm._mod_net_isHost() then
-                    -- msg:send_to_all()
-                -- end
-            -- end
-        -- end
-        -- Alarm.create(GameStart, 2)
-    -- end)
-
-    -- packetConfig:onReceived(function(msg)
-        -- local msgplayer = msg:read_instance()
-        -- local playerdata = msgplayer:get_data()
-        -- playerdata.vulcanAutoFire = msg:read_byte()
-
-        -- if gm._mod_net_isHost() then
-            -- local msg = packetConfig:message_begin()
-            -- msg:write_instance(Player.get_client())
-            -- msg:write_byte(playerdata.vulcanAutoFire)
-            -- msg:send_to_all()
-        -- end
-    -- end)
-	
 	HOTLOADING = true
 end
 Initialize.add(init)
@@ -85,12 +76,3 @@ Initialize.add(init)
 if HOTLOADING then
 	init()
 end
-
--- Add ImGui window
--- gui.add_imgui(function()
-    -- if ImGui.Begin("CaptainReturns") then
-        -- params.vulcanAutoFire = ImGui.Checkbox("Vulcan Shotgun Rapid Fire", params.vulcanAutoFire)
-        -- Toml.save_cfg(_ENV["!guid"], params)
-    -- end
-    -- ImGui.End()
--- end)

@@ -1,10 +1,10 @@
 {
 	"name": "Captain Returns",
 	"version_number": "0.0.1",
-	"website_url": "",
-	"description": "Adds Captain from Risk of Rain 2.",
+	"website_url": "https://github.com/DigBugReal/captainsorders",
+	"description": "[BETA] Adds Captain from Risk of Rain 2.",
 	"dependencies": [
-		"ReturnsAPI-ReturnsAPI-0.1.26",
+		"ReturnsAPI-ReturnsAPI-0.1.49",
 		"ReturnOfModding-ReturnOfModding-1.1.9",
 		"LuaENVY-ENVY-1.2.0"
 	]

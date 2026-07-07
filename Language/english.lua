@@ -4,7 +4,7 @@ survivor = {
 		name = "Captain",
 		nameUpper = "CAPTAIN",
 		description = "The <y>Captain</c> is a heavy-hitting zoner who can dampen the chaos of the battlefield, using <y>Orbital Supply Beacons</c> and <y>Defensive Microbots</c> to relieve himself and allies alike. Combining a well-timed <y>Power Tazer</c> shot with <y>Orbital Probe</c> strikes will devastate most crowds with ease, all while your trusty <y>Vulcan Shotgun</c> clears up whatever remains.",
-		endQuote = "..and so he left, with a new tale to tell.",
+		endQuote = "..and so he left, with a tale for the grave.",
 		story = "<ul>Passenger Details:</c>\n<g>[Employee Class]</c>\n\n<ul>Employee Details:</c>\nI'm honored to introduce one of UES' finest former captains to our operation. Outside of being a good colleague of mine, he's successfully overseen dozens of high-stakes missions until his retirement from the military back in 2037. Treat him as you would your own captain, he's damn well earned it.\n\n<b>[SECURITY RECALL]</c>\n<ul>[Event C1]</c> Employee requested a contracted commando to deliver a parcel into their quarters. Request granted.\n<ul>[Event C2]</c> Employee observed inspecting UES-grade security drones. Miniature spherical devices were noted closely orbiting active security drones.\n<ul>[Event C3a]</c> Employee pinged nearby UES supply satellites for remote access. Request pending..\n<ul>[Event C3b]</c> Request recieved by satellite stationed in Petrichor System.",
 		arrival = "<y>Destination:</c>\nUES Shipping Dock 0,\nRedview,\nMars",
 		departure = "<y>Departure:</c>\nUES Shipping Dock 5,\nRedview,\nMars",
@@ -14,7 +14,7 @@ survivor = {
 skill = {
 	captainZ = {
 			name = "Vulcan Shotgun",
-			description = "Fire a blast of pellets for <y>6x80% damage</c>. Charging the attack narrows the <b>spread</c> and increases <b>range</c>."
+			description = "Fire a blast of pellets for up to <y>6x65% damage</c>. Charging the attack narrows the <b>spread</c> and increases <b>range and knockback</c>."
 		},
 	captainX = {
 			name = "Power Tazer",
@@ -26,7 +26,7 @@ skill = {
 		},
 	captainC_1 = {
 			name = "Orbital Probe",
-			description = "Request an Orbital Probe, dealing <y>500% damage</c> and <y>stunning</c>."
+			description = "Request an Orbital Probe, each dealing <y>500% damage</c> and <y>stunning</c>."
 		},
 	captainC_2 = {
 			name = "ST-57 'FORTUNA' Orbital Beam",
@@ -58,11 +58,11 @@ skill = {
 		},
 	captainBeaconResupply = {
 			name = "Beacon: Resupply",
-			description = "On use, <b>refreshes Skill and Equipment cooldowns</c> and <g>heals 35% of your maximum health as barrier</c>\nCan be used <y>3 times</c> before recharging for <b>45 seconds</c>."
+			description = "On use, <b>refreshes Skill and Equipment cooldowns</c> and <g>heals 35% of your maximum health as barrier.</c>\nCan be used <y>3 times</c> before recharging for <b>45 seconds</c>."
 		},
 	captainBeaconResupply_1 = {
 			name = "Beacon: Resupply",
-			description = "On use, <b>refreshes Skill and Equipment cooldowns</c> and <g>heals 35% of your maximum health as barrier</c>\nCan be used <y>3 times</c> before recharging for <b>45 seconds</c>."
+			description = "On use, <b>refreshes Skill and Equipment cooldowns</c> and <g>heals 35% of your maximum health as barrier.</c>\nCan be used <y>3 times</c> before recharging for <b>45 seconds</c>."
 		},
 	captainBeaconHacking = {
 			name = "Beacon: Hacking",
@@ -82,11 +82,11 @@ skill = {
 		},
 	captainBeaconPunisher = {
 			name = "Beacon: Punisher",
-			description = "Nearby allies gain <y>10% bonus damage</c>.\nBonus increases by <y>8%</c> based on the <y>number of enemies this beacon hits</c> on impact."
+			description = "Nearby allies gain <y>10% bonus damage</c>.\nBonus increases by <y>6%</c> based on the <y>number of enemies this beacon hits</c> on impact."
 		},
 	captainBeaconPunisher_1 = {
 			name = "Beacon: Punisher",
-			description = "Nearby allies gain <y>10% bonus damage</c>.\nBonus increases by <y>8%</c> based on the <y>number of enemies this beacon hits</c> on impact."
+			description = "Nearby allies gain <y>10% bonus damage</c>.\nBonus increases by <y>6%</c> based on the <y>number of enemies this beacon hits</c> on impact."
 		},
 	captainUnavailable = {
 			name = "Unavailable",
@@ -122,4 +122,61 @@ interactable = {
 		text = "Take Resupply Charge"
 		}
 	},
+achievement = {
+	captainUnlockChar = {
+		name = "Wanderlust",
+		description = "Beat 10 stages in one run."
+		},
+	-- captainPrism = {
+		-- name = "Strange Prism: Estranged",
+		-- description = "Found this prism in the world."
+		-- },
+	captainHackUnlock = {
+		name = "Business Venture",
+		description = "Captain: Purchase a total of 7 Armory Chests while on the final stage."
+		},
+	captainResUnlock = {
+		name = "Resourceful",
+		description = "Captain: Finish 3 stages in a row holding a different Equipment each time."
+		},
+	captainUpUnlock = {
+		name = "Upgrades, People!",
+		description = "Captain: Upgrade drones a total of 14 times."
+		},
+	captainPunUnlock = {
+		name = "Straightened Out",
+		description = "Captain: Kill 5 Black Imps simultaneously with an Orbital Probe."
+		},
+	captainTenna = {
+		name = "Prime Time",
+		description = "Captain: Use Captain's Brooch a total of 10 times."
+		},	
+	captainMastery = {
+		name = "Captain: Mastery",
+		description = "Captain: Beat the game on Monsoon difficulty or higher."
+		},
+	unlock_captain_skin_p = {
+		name = "Captain's Orders" 
+		}
+	},
+
+	ui = {
+		options = {
+			CaptainReturns = {
+				header = "Captain's Orders",
+				captainAutofire = "Vulcan Shotgun Rapid Fire",
+				["captainAutofire.desc"] = "Whether holding the skill to full charge should automatically fire it.\nDisabled by default.",
+				captainForceUnlock = "Force Unlock Captain",
+				["captainForceUnlock.desc"] = "Immediately Unlocks Captain when pressed.\nAlso Re-locks Captain if he's already unlocked.",
+				captainDoJudgeTip = "Toggle Judgement Tip",
+				["captainDoJudgeTip.desc"] = "Displays a tip about a change in Captain's Kit at the beginning of his Judgement Trial.\nEnabled by default."
+				
+			}
+		}
+	},
+	
+	misc = {
+		text1 = "Beacons no longer restock after each stage.",
+		text2 = "Use them wisely."
+	}
 }

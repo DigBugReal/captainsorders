@@ -18,7 +18,7 @@ log.group = ItemLog.Group.RARE
 local bot = Object.new("captainMicrobotObject")
 bot:set_sprite(sprite_bot)
 
-local projectiles = {gm.constants.oJellyMissile, gm.constants.oWurmMissile, gm.constants.oShamBMissile, gm.constants.oTurtleMissile, gm.constants.oBrambleBullet, gm.constants.oLizardRSpear, gm.constants.oEfMissileEnemy, gm.constants.oSpiderBulletNoSync, gm.constants.oSpiderBullet, gm.constants.oGuardBulletNoSync, gm.constants.oGuardBullet, gm.constants.oBugBulletNoSync, gm.constants.oBugBullet, gm.constants.oScavengerBulletNoSync, gm.constants.oScavengerBullet, gm.constants.oMushDust, gm.constants.oWispBMine, gm.constants.oWispBMineNosync}
+local extras = {gm.constants.oMushDust, gm.constants.oWispBMine, gm.constants.oWispBMineNosync}
 
 Callback.add(bots.on_acquired, function(actor, stack)
 	
@@ -27,6 +27,9 @@ Callback.add(bots.on_acquired, function(actor, stack)
 	end
     if not actor.instmicrobots then
         local instbot = bot:create(actor.x, actor.y)
+		if actor.class == Survivor.find("captain", namespace).value then
+			instbot:actor_skin_skinnable_set_skin(actor)
+		end
         Instance.get_data(instbot).parent = actor
         actor.instmicrobots = instbot
     end
@@ -35,7 +38,7 @@ end)
 
 Callback.add(bot.on_create, function(self)
 	local data = Instance.get_data(self)
-	
+	self:actor_skin_skinnable_init();
 	self.persistent = true
 	self.sprite_index = sprite_bot
 	self.image_index = 0
@@ -60,18 +63,28 @@ end)
 
 Callback.add(bot.on_step, function(self)
 	local data = Instance.get_data(self)
-	
-	if not Instance.exists(data.parent) then
+	local parent = data.parent
+	if not Instance.exists(parent) then
         self:destroy()
         return
     end
+	
+	if not GM.actor_is_alive(parent) then
+		Sound.wrap(gm.constants.wDroneDeath):play(parent.instmicrobots.x, parent.instmicrobots.y, 1, 1.9 + math.random() * 0.2)
+		local objsparks = Object.find("EfSparks", "ror")
+		local sparks = objsparks:create(parent.instmicrobots.x, parent.instmicrobots.y)
+		sparks.sprite_index = gm.constants.sEfExplosiveEnemy
+		sparks.image_alpha = 0.75
+        if parent.instmicrobots then 
+			parent.instmicrobots:destroy() 
+		end
+        parent.instmicrobots = nil
+	end
 	
 	local speed = data.angle_speed / 60.0
     data.angle = data.angle - speed
     self.x = data.parent.x + (gm.dcos(data.angle) * data.radius)
     self.y = data.parent.y - (gm.dsin(data.angle) * data.radius)
-	-- self.image_xscale = data.parent.image_xscale
-	-- self.image_xscale = self.image_xscale
 end)
 
 Hook.add_post(gm.constants.init_drone, function(self, other)
@@ -99,18 +112,29 @@ end)
 
 Callback.add(bots.on_removed, function(actor, stack)
     if stack <= 1 then
-        if actor.instmicrobots:exists() then 
+		Sound.wrap(gm.constants.wDroneDeath):play(actor.instmicrobots.x, actor.instmicrobots.y, 1, 1.9 + math.random() * 0.2)
+		local objsparks = Object.find("EfSparks", "ror")
+		local sparks = objsparks:create(actor.instmicrobots.x, actor.instmicrobots.y)
+		sparks.sprite_index = gm.constants.sEfExplosiveEnemy
+		sparks.image_alpha = 0.75
+        if actor.instmicrobots then 
 			actor.instmicrobots:destroy() 
 		end
         actor.instmicrobots = nil
     end
 end)
 
+Callback.add(bot.on_draw, function(inst)
+	inst:actor_skin_skinnable_draw_self();
+end)
+
 Callback.add(bot.on_step, function(self)
 	local actor = Instance.get_data(self).parent
+	if not actor then return end
 	local radius = 125 + 125 * actor:item_count(bots)
 	local deletedbullet = nil
 	local drones = nil
+	local pos = nil
 	
 	if actor.drone_count ~= nil then
 		drones = actor.drone_count
@@ -121,35 +145,55 @@ Callback.add(bot.on_step, function(self)
     if actor.microbotscharge < math.min(60, 60 / (1 + 0.25 * drones)) then
         actor.microbotscharge = actor.microbotscharge + 1
     else
-		--PLEASE remove more shit klehrik this isn't tedious enough
-		for _, item in ipairs(projectiles) do
-			local bulettss = Instance.find_all(item)
-			for _, bullet in ipairs(bulettss) do
-				local distance = gm.point_distance(actor.x, actor.y, bullet.x, bullet.y)
-				if distance <= radius then
-					radius = distance
-					deletedbullet = bullet
+		for _, bullet in pairs(Object.find_all_by_tag("enemy_projectile")) do
+			local near = Instance.nearest(actor.x, actor.y, bullet)
+            if Instance.exists(near) then
+				local vPos = Vector(near.x, near.y)
+				local pPos = Vector(actor.x, actor.y)
+				local length = (vPos - pPos).length
+				if length <= radius then
+					pos = vPos
+					deletedbullet = near
 				end
 			end
 		end
 		
-		if deletedbullet ~= nil then
+			for _, obj in pairs(extras) do
+				local near = Instance.nearest(actor.x, actor.y, obj)
+				if Instance.exists(near) then
+					local vPos = Vector(near.x, near.y)
+					local pPos = Vector(actor.x, actor.y)
+					local length = (vPos - pPos).length
+					if length <= radius then
+						pos = vPos
+						deletedbullet = near
+					end
+				end
+			end
+		
+		if deletedbullet ~= nil and deletedbullet.parent ~= actor then
 			sound_botsShoot:play(actor.instmicrobots.x, actor.instmicrobots.y, 0.8, 0.9 + math.random() * 0.1)
 			if actor.instmicrobots ~= nil then
-				local objtracer = Object.find("efLineTracer")
+				local objtracer = Object.find("EfLineTracer", "ror")
 				local tracer = objtracer:create(actor.instmicrobots.x, actor.instmicrobots.y)
-				tracer.xend = deletedbullet.x
-				tracer.yend = deletedbullet.y
+				tracer.xend = pos.x
+				tracer.yend = pos.y
 				tracer.bm = 1
 				tracer.rate = 0.1
 				tracer.width = 2
 				tracer.image_blend = Color.RED
-				local objsparks = Object.find("efSparks")
-				local sparks = objsparks:create(deletedbullet.x, deletedbullet.y)
+				local objsparks = Object.find("EfSparks", "ror")
+				local sparks = objsparks:create(pos.x, pos.y)
 				sparks.sprite_index = gm.constants.sSparksIce
 				sparks.image_blend = Color.from_rgb(255, 100, 100)
+				-- print(deletedbullet.object_index)
+				if deletedbullet.object_index == gm.constants.oWispBMine or deletedbullet.object_index == gm.constants.oWispBMineNosync then
+					deletedbullet.y = math.huge --they explode if destroyed now. just move ts under the stage idek
+					deletedbullet:destroy()
+				else
+					deletedbullet:destroy()
+				end
 			end
-			deletedbullet:destroy()
 			actor.microbotscharge = 0
 		end
 	end
