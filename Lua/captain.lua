@@ -130,7 +130,7 @@ cap.cape_offset = Array.new({3, -10, 0, -7})
 
 --Skin implementation with RAPI
 --First argument is identifiers, can be a table of identifiers that correspond with the # of palettes in your palette sprite
-cap:add_skin({"default", "militia", "showman", "admiral", "malice", "estranged", "judgement"}, sprite_palette, sprite_palette_por, sprite_palette_sel)
+cap:add_skin({"default", "militia", "showman", "admiral", "malice", "estranged", "capjudgement"}, sprite_palette, sprite_palette_por, sprite_palette_sel)
 
 -- Achievements wip
 local unlock = Achievement.new("captainUnlockChar")
@@ -167,7 +167,7 @@ prime.progress = 0
 local judge = Achievement.new("unlock_captain_skin_p")
 judge.parent_id = unlock.value
 judge.is_hidden = true
-judge:set_unlock_skin(cap, "judgement")
+judge:set_unlock_skin(cap, "capjudgement")
 judge.is_trial = true
 judge.token_desc = "achievement.trialFinalDescTemplate"
 judge.token_desc2 = cap.token_name
@@ -198,7 +198,7 @@ judge.group = 1
 
 --Draw the crown for the judgement skin
 Hook.add_post("gml_Object_oP_Draw_73", function (actor, other)
-	if actor.skin_current ~= 39 or actor.class ~= cap.value or not actor.visible then return end
+	if actor.skin_current ~= 40 or actor.class ~= cap.value or not actor.visible then return end
 	local xo, yo
 	xo = 0
 	yo = -20
@@ -2510,11 +2510,11 @@ end)
 
 --Mastery Skin Unlock and how to do it
 Hook.add_pre(gm.constants["ending_get_id"], function() --called on ending creation
-	if not (Difficulty.find("hard", "ror"):is_active() or (mods["RobomandosLab-StarstormReturns"] and Difficulty.find("typhoon", "ssr"):is_active())) then return end --check if active diff is Monsoon (or Typhoon ssr !!)
-	--now just iterate through players and check their respective class
+	if not Difficulty.wrap(gm._mod_game_getDifficulty()).is_monsoon_or_higher then return end
 	for _, actor in ipairs(Instance.find_all(gm.constants.oP)) do
-		if actor.class == cap_id then
+		if actor.class == cap_id and GM.actor_is_alive(actor) then --cheap way of checking if you "won" for now
 			mastre:add_progress(1)
+			print("bitch")
 		end
 	end
 end)
